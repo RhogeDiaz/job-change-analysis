@@ -4,6 +4,7 @@ library(plotly)
 library(bslib)
 library(tidyverse)
 
+model = readRDS("../job-change-analysis/job_change_predictor.rds")
 dataset = "https://raw.githubusercontent.com/RhogeDiaz/job-change-analysis/refs/heads/main/clean_hr_dataset.csv"
 
 # gi load ang cleaned dataset
@@ -135,7 +136,9 @@ ui <- page_navbar(
   # PREDICTIVE ANALYTICS TAB
   nav_panel(
     title = "Predictive Analytics",
-    sidebarPanel(
+    fluidRow(
+      sidebarPanel(
+        # style = 'background: black;',
         h3('Enter Employee Information'),
         selectInput('company_size', "Company Size", c('<10', '50-99', '100-500', '500-999', '1000-4999', '10000+', '5000-9999', 'Unknown')),
         selectInput('company_type', 'Company Type', c('Early Stage Startup', 'Funded Startup', 'NGO', 'Public Sector', 'Pvt Ltd', 'Unknown', 'Other')),
@@ -148,6 +151,15 @@ ui <- page_navbar(
         selectInput('discipline', 'Major Discipline', c('STEM', 'Business Degree', 'Arts', 'Humanities', 'Other', 'No Major')),
         numericInput('training_hours', 'Training Hours', 0),
         actionButton('predict_button', 'Predict Employee Job Change')
+      ),
+
+      mainPanel(
+        h1('Prediction Results'),
+        hr(),
+        h3(textOutput('prediction_decision')),
+        p(textOutput('prediction_prob')),
+        br()
+      )
     )
   ),
 
@@ -396,6 +408,66 @@ server <- function(input, output) {
             panel.grid.minor   = element_blank())
 
     ggplotly(p, tooltip = "text")
+  })
+
+  # PREDICTIVE PART
+  prediction_results <- reactiveValues(decision = "No prediction made yet", prob = "")
+
+  observeEvent(input$predict_button, {
+    
+    exp_num = as.numeric(input$experience)
+    exp_cat = map_experience(exp_num)
+    
+    lnj_num = as.numeric(input$last_job_years)
+    lnj_mapped_num = map_lnj(lnj_num) 
+    
+    new_employee = tibble(
+      company_size         = factor(input$company_size),
+      company_type         = factor(input$company_type),
+      experience_numeric   = exp_num,
+      experience           = factor(exp_cat),
+      enrolled_university  = factor(input$enrolled),
+      relevant_experience  = factor(input$relevant_exp),
+      education_level      = factor(input$educ_level),
+      last_new_job_numeric = as.numeric(lnj_mapped_num),
+      gender               = factor(input$gender),
+      major_discipline      = factor(input$discipline),
+      training_hours       = as.numeric(input$training_hours)
+    )
+    
+    # 1. Safely generate predictions using tidymodels workflow (wf_fit)
+    result <- tryCatch({
+      pred_class <- predict(wf_fit, new_data = new_employee, type = "class")[[1]]
+      pred_prob  <- predict(wf_fit, new_data = new_employee, type = "prob")
+      
+      # Extract probability for "Looking"
+      prob_looking <- round(pred_prob$.pred_Looking * 100, 1)
+      
+      # Return a list of results if successful
+      list(
+        decision = paste("Employee Status Decision:", as.character(pred_class)),
+        prob     = paste0("Probability of looking for a job change: ", prob_looking, "%")
+      )
+    }, error = function(e) {
+      # Return a list with error messages if it fails
+      list(
+        decision = "Error in Prediction",
+        prob     = paste("Verify factor alignment:", e$message)
+      )
+    })
+    
+    # 2. Update reactive values with the extracted results
+    prediction_results$decision <- result$decision
+    prediction_results$prob     <- result$prob
+  })
+
+  # 3. Render outputs back to your UI mainPanel elements
+  output$prediction_decision <- renderText({
+    prediction_results$decision
+  })
+  
+  output$prediction_prob <- renderText({
+    prediction_results$prob
   })
 }
 
