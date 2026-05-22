@@ -1,6 +1,6 @@
 # gi keep ni nga snippet para reference lang, dili na ni included sa dashboard
 
-#  gender breakdown pie (gi remove kay redundant sa gender checkbox filter) ---
+#  gender breakdown pie (gi remove kay redundant sa gender checkbox filter)
 output$plot_gender <- renderPlotly({
 
   gender_dist <- desc_data() %>%
@@ -14,7 +14,7 @@ output$plot_gender <- renderPlotly({
           marker = list(colors = c("#4C9BE8", "#81C784", "#B0BEC5", "#FFB74D")))
 })
 
-#  relevant experience bar (gi remove kay redundant sa relevant experience radio filter) ---
+#  relevant experience bar (gi remove kay redundant sa relevant experience radio filter)
 output$plot_rel_exp <- renderPlotly({
 
   d <- get_y(desc_data(), relevant_experience)
@@ -34,7 +34,7 @@ output$plot_rel_exp <- renderPlotly({
   ggplotly(p, tooltip = "text")
 })
 
-#  relevant experience vs job change grouped bar (gi remove kay redundant sa diagnostic radio filter) ---
+#  relevant experience vs job change grouped bar (gi remove kay redundant sa diagnostic radio filter)
 output$plot_diag_rel_exp <- renderPlotly({
 
   rel_job <- diag_data() %>%
