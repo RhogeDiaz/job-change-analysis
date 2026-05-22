@@ -17,7 +17,6 @@ map_experience <- function(val) {
   if (is.null(val) || is.na(val) || !is.numeric(val)) {
     return("Unknown")
   }
-
   if (val < 1) {
     return("<1")
   } else if (val > 20) {
@@ -27,11 +26,10 @@ map_experience <- function(val) {
   }
 }
 
-map_lnj<- function(val) {
+map_lnj <- function(val) {
   if (is.null(val) || is.na(val) || !is.numeric(val)) {
     return(0)
   }
-
   if (val < 1) {
     return(0)
   } else if (val > 5) {
@@ -40,6 +38,7 @@ map_lnj<- function(val) {
     return(val)
   }
 }
+
 
 ui <- page_navbar(
   title = "HR Analytics Dashboard",
@@ -52,9 +51,35 @@ ui <- page_navbar(
   nav_panel(
     title = "Descriptive Analytics",
 
-    # gi wrap sa div para scrollable ang page, dili mag squeeze ang charts
     div(
       style = "overflow-y: auto; padding: 16px;",
+
+      # filter row para sa descriptive tab
+      card(
+        card_body(
+          layout_columns(
+            col_widths = c(6, 6),
+
+            # filter 1 - para ma pilion kung count o percentage ang ipakita sa y-axis
+            radioButtons(
+              inputId  = "desc_yaxis",
+              label    = "Show Values As",
+              choices  = c("Count", "Percentage"),
+              selected = "Count",
+              inline   = TRUE
+            ),
+
+            # filter 2 - para ma filter tanan descriptive charts base sa gender
+            checkboxGroupInput(
+              inputId  = "desc_gender",
+              label    = "Filter by Gender",
+              choices  = c("Male", "Female", "Other", "Unknown"),
+              selected = c("Male", "Female", "Other", "Unknown"),
+              inline   = TRUE
+            )
+          )
+        )
+      ),
 
       layout_columns(
         col_widths = c(6, 6),
@@ -70,18 +95,8 @@ ui <- page_navbar(
         ),
 
         card(
-          card_header("Gender Breakdown"),
-          plotlyOutput("plot_gender", height = "450px")
-        ),
-
-        card(
           card_header("Training Hours Spread"),
           plotlyOutput("plot_training", height = "450px")
-        ),
-
-        card(
-          card_header("Relevant Experience"),
-          plotlyOutput("plot_rel_exp", height = "450px")
         ),
 
         card(
@@ -98,9 +113,57 @@ ui <- page_navbar(
   nav_panel(
     title = "Diagnostic Analytics",
 
-    # same ra, gi wrap para scrollable pud
     div(
       style = "overflow-y: auto; padding: 16px;",
+
+      # filter row para sa diagnostic tab — gi flex para pareho ang height sa tanan inputs
+      card(
+        style = "min-height: 120px;",
+        card_body(
+          padding = "16px",
+          div(
+            style = "display: flex; align-items: flex-end; gap: 48px; flex-wrap: wrap;",
+
+            # filter 1 - radio buttons para ma drill down sa specific education level
+            # gi change gikan selectInput para dili mag expand paubos ang dropdown
+            div(
+              style = "min-width: 200px;",
+              radioButtons(
+                inputId  = "diag_education",
+                label    = "Filter by Education Level",
+                choices  = c("All", "Primary School", "High School",
+                             "Graduate", "Masters", "Phd", "Unknown"),
+                selected = "All",
+                inline   = TRUE
+              )
+            ),
+
+            # filter 2 - radio para ma filter base sa relevant experience
+            div(
+              style = "min-width: 180px;",
+              radioButtons(
+                inputId  = "diag_rel_exp",
+                label    = "Relevant Experience",
+                choices  = c("All", "Yes", "No"),
+                selected = "All",
+                inline   = TRUE
+              )
+            ),
+
+            # filter 3 - checkboxes para ma filter base sa gender
+            div(
+              style = "min-width: 260px;",
+              checkboxGroupInput(
+                inputId  = "diag_gender",
+                label    = "Filter by Gender",
+                choices  = c("Male", "Female", "Other", "Unknown"),
+                selected = c("Male", "Female", "Other", "Unknown"),
+                inline   = TRUE
+              )
+            )
+          )
+        )
+      ),
 
       layout_columns(
         col_widths = c(6, 6),
@@ -121,11 +184,6 @@ ui <- page_navbar(
         ),
 
         card(
-          card_header("Relevant Experience vs Job Change"),
-          plotlyOutput("plot_diag_rel_exp", height = "450px")
-        ),
-
-        card(
           card_header("Last New Job vs Job Change Rate"),
           plotlyOutput("plot_diag_last_job", height = "450px")
         )
@@ -133,12 +191,12 @@ ui <- page_navbar(
     )
   ),
 
-  # PREDICTIVE ANALYTICS TAB
+
+  # PREDICTIVE ANALYTICS TAB — wala gi usab, gi keep as-is
   nav_panel(
     title = "Predictive Analytics",
     fluidRow(
       sidebarPanel(
-        # style = 'background: black;',
         h3('Enter Employee Information'),
         selectInput('company_size', "Company Size", c('<10', '50-99', '100-500', '500-999', '1000-4999', '10000+', '5000-9999', 'Unknown')),
         selectInput('company_type', 'Company Type', c('Early Stage Startup', 'Funded Startup', 'NGO', 'Public Sector', 'Pvt Ltd', 'Unknown', 'Other')),
@@ -152,7 +210,6 @@ ui <- page_navbar(
         numericInput('training_hours', 'Training Hours', 0),
         actionButton('predict_button', 'Predict Employee Job Change')
       ),
-
       mainPanel(
         h3('Prediction Results'),
         hr(),
@@ -163,7 +220,8 @@ ui <- page_navbar(
     )
   ),
 
-  # ABOUT TAB
+
+  # ABOUT TAB — gi keep as-is
   nav_panel(
     title = "About"
   )
@@ -172,27 +230,47 @@ ui <- page_navbar(
 
 server <- function(input, output) {
 
-  # gi define ang common colors para consistent tanan charts
+  # common colors para consistent tanan charts
   job_colors <- c("Looking" = "#4C9BE8", "Not Looking" = "#B0BEC5")
 
+  # gi filter ang test rows para sa diagnostic
+  df_diag_base <- df_train %>% filter(job_change_label != "No Data")
 
-  # DESCRIPTIVE CHARTS
 
-  # chart 1 - pila ka tawo ang looking/not looking mag change ug job
-  output$plot_job_change <- renderPlotly({
+  # DESCRIPTIVE — gi reactive ang data base sa gender filter
+  desc_data <- reactive({
+    df_train %>% filter(gender %in% input$desc_gender)
+  })
 
-    job_dist <- df_train %>%
-      count(job_change_label) %>%
+  # helper function — mo return count or pct depende sa radio
+  # para dili mag duplicate og code sa matag chart
+  get_y <- function(data, group_col) {
+    d <- data %>%
+      count({{ group_col }}) %>%
       mutate(pct = round(n / sum(n) * 100, 1))
 
-    p <- ggplot(job_dist,
-                aes(x = job_change_label, y = n, fill = job_change_label,
-                    text = paste0(job_change_label, ": ", n, " (", pct, "%)"))) +
+    if (input$desc_yaxis == "Percentage") {
+      d <- d %>% mutate(y_val = pct, y_label = paste0(pct, "%"))
+    } else {
+      d <- d %>% mutate(y_val = n, y_label = as.character(n))
+    }
+    d
+  }
+
+
+  # chart 1 - job change distribution, mo react sa gender filter + count/pct toggle
+  output$plot_job_change <- renderPlotly({
+
+    d <- get_y(desc_data(), job_change_label)
+
+    p <- ggplot(d,
+                aes(x = job_change_label, y = y_val, fill = job_change_label,
+                    text = paste0(job_change_label, ": ", y_label))) +
       geom_col(width = 0.5, show.legend = FALSE) +
-      geom_text(aes(label = paste0(n, "\n(", pct, "%)")), vjust = -0.4, size = 3.5) +
+      geom_text(aes(label = y_label), vjust = -0.4, size = 3.5) +
       scale_fill_manual(values = job_colors) +
       scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
-      labs(x = "Status", y = "Count") +
+      labs(x = "Status", y = input$desc_yaxis) +
       theme_minimal(base_size = 12) +
       theme(panel.grid.major.x = element_blank(),
             panel.grid.minor   = element_blank())
@@ -200,20 +278,18 @@ server <- function(input, output) {
     ggplotly(p, tooltip = "text")
   })
 
-  # chart 2 - unsa ang education level sa kadaghanan sa mga enrollees
+  # chart 2 - education level spread, mo react sa gender filter + count/pct toggle
   output$plot_education <- renderPlotly({
 
-    edu_dist <- df_train %>%
-      count(education_level) %>%
-      mutate(pct = round(n / sum(n) * 100, 1))
+    d <- get_y(desc_data(), education_level)
 
-    p <- ggplot(edu_dist,
-                aes(x = education_level, y = n, fill = education_level,
-                    text = paste0(education_level, ": ", n, " (", pct, "%)"))) +
+    p <- ggplot(d,
+                aes(x = education_level, y = y_val, fill = education_level,
+                    text = paste0(education_level, ": ", y_label))) +
       geom_col(show.legend = FALSE) +
       scale_fill_brewer(palette = "Blues") +
       scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-      labs(x = "Education Level", y = "Count") +
+      labs(x = "Education Level", y = input$desc_yaxis) +
       theme_minimal(base_size = 12) +
       theme(panel.grid.major.x = element_blank(),
             panel.grid.minor   = element_blank())
@@ -221,24 +297,10 @@ server <- function(input, output) {
     ggplotly(p, tooltip = "text")
   })
 
-  # chart 3 - unsa ang gender breakdown sa mga enrollees
-  output$plot_gender <- renderPlotly({
-
-    gender_dist <- df_train %>%
-      count(gender) %>%
-      mutate(pct = round(n / sum(n) * 100, 1))
-
-    plot_ly(gender_dist,
-            labels = ~gender, values = ~n, type = "pie",
-            textinfo = "label+percent",
-            hovertemplate = paste0("%{label}: %{value} (%{percent})<extra></extra>"),
-            marker = list(colors = c("#4C9BE8", "#81C784", "#B0BEC5", "#FFB74D")))
-  })
-
-  # chart 4 - pila ka training hours ang natapos sa mga enrollees
+  # chart 3 - training hours boxplot, mo react sa gender filter
   output$plot_training <- renderPlotly({
 
-    p <- ggplot(df_train,
+    p <- ggplot(desc_data(),
                 aes(y = training_hours,
                     text = paste0("Hours: ", training_hours))) +
       geom_boxplot(fill = "#4C9BE8", color = "#1565C0",
@@ -252,42 +314,18 @@ server <- function(input, output) {
     ggplotly(p, tooltip = "text")
   })
 
-  # chart 5 - pila ang may relevant experience ug wala
-  output$plot_rel_exp <- renderPlotly({
-
-    rel_dist <- df_train %>%
-      count(relevant_experience) %>%
-      mutate(pct = round(n / sum(n) * 100, 1))
-
-    p <- ggplot(rel_dist,
-                aes(x = relevant_experience, y = n, fill = relevant_experience,
-                    text = paste0(relevant_experience, ": ", n, " (", pct, "%)"))) +
-      geom_col(width = 0.5, show.legend = FALSE) +
-      geom_text(aes(label = paste0(n, "\n(", pct, "%)")), vjust = -0.4, size = 3.5) +
-      scale_fill_manual(values = c("Yes" = "#4C9BE8", "No" = "#B0BEC5")) +
-      scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
-      labs(x = "Relevant Experience", y = "Count") +
-      theme_minimal(base_size = 12) +
-      theme(panel.grid.major.x = element_blank(),
-            panel.grid.minor   = element_blank())
-
-    ggplotly(p, tooltip = "text")
-  })
-
-  # chart 6 - enrolled ba sila sa university or wala
+  # chart 4 - university enrollment, mo react sa gender filter + count/pct toggle
   output$plot_university <- renderPlotly({
 
-    uni_dist <- df_train %>%
-      count(enrolled_university) %>%
-      mutate(pct = round(n / sum(n) * 100, 1))
+    d <- get_y(desc_data(), enrolled_university)
 
-    p <- ggplot(uni_dist,
-                aes(x = enrolled_university, y = n, fill = enrolled_university,
-                    text = paste0(enrolled_university, ": ", n, " (", pct, "%)"))) +
+    p <- ggplot(d,
+                aes(x = enrolled_university, y = y_val, fill = enrolled_university,
+                    text = paste0(enrolled_university, ": ", y_label))) +
       geom_col(show.legend = FALSE) +
       scale_fill_brewer(palette = "Blues") +
       scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-      labs(x = "Enrollment Status", y = "Count") +
+      labs(x = "Enrollment Status", y = input$desc_yaxis) +
       theme_minimal(base_size = 12) +
       theme(panel.grid.major.x = element_blank(),
             panel.grid.minor   = element_blank())
@@ -296,15 +334,25 @@ server <- function(input, output) {
   })
 
 
-  # DIAGNOSTIC CHARTS
+  # DIAGNOSTIC — gi reactive ang data base sa tanan diagnostic filters
+  diag_data <- reactive({
+    d <- df_diag_base %>% filter(gender %in% input$diag_gender)
 
-  # gi filter ang test rows para dili masama ang diagnostic charts
-  df_diag <- df_train %>% filter(job_change_label != "No Data")
+    if (input$diag_rel_exp != "All") {
+      d <- d %>% filter(relevant_experience == input$diag_rel_exp)
+    }
 
-  # chart 1 - kinsa ang mas gusto mag change ug job base sa ilang education
+    if (input$diag_education != "All") {
+      d <- d %>% filter(as.character(education_level) == input$diag_education)
+    }
+
+    d
+  })
+
+  # chart 1 - job change by education, mo react sa tanan diagnostic filters
   output$plot_diag_education <- renderPlotly({
 
-    edu_job <- df_diag %>%
+    edu_job <- diag_data() %>%
       count(education_level, job_change_label)
 
     p <- ggplot(edu_job,
@@ -322,10 +370,10 @@ server <- function(input, output) {
     ggplotly(p, tooltip = "text")
   })
 
-  # chart 2 - mas gusto bang mag change ug job ang mas experienced o dili
+  # chart 2 - experience vs job change rate, mo react sa tanan diagnostic filters
   output$plot_diag_experience <- renderPlotly({
 
-    exp_rate <- df_diag %>%
+    exp_rate <- diag_data() %>%
       group_by(experience_numeric) %>%
       summarise(
         total   = n(),
@@ -347,10 +395,10 @@ server <- function(input, output) {
     ggplotly(p, tooltip = "text")
   })
 
-  # chart 3 - heatmap sa major discipline ug education level
+  # chart 3 - heatmap, mo react sa tanan diagnostic filters
   output$plot_diag_heatmap <- renderPlotly({
 
-    heat_data <- df_diag %>%
+    heat_data <- diag_data() %>%
       count(major_discipline, education_level)
 
     p <- ggplot(heat_data,
@@ -365,30 +413,10 @@ server <- function(input, output) {
     ggplotly(p, tooltip = "text")
   })
 
-  # chart 4 - mas gusto bang mag change ug job ang naa ug relevant experience
-  output$plot_diag_rel_exp <- renderPlotly({
-
-    rel_job <- df_diag %>%
-      count(relevant_experience, job_change_label)
-
-    p <- ggplot(rel_job,
-                aes(x = relevant_experience, y = n, fill = job_change_label,
-                    text = paste0(relevant_experience, " — ", job_change_label, ": ", n))) +
-      geom_col(position = "dodge", width = 0.5) +
-      scale_fill_manual(values = job_colors) +
-      scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-      labs(x = "Relevant Experience", y = "Count", fill = "Status") +
-      theme_minimal(base_size = 12) +
-      theme(panel.grid.major.x = element_blank(),
-            panel.grid.minor   = element_blank())
-
-    ggplotly(p, tooltip = "text")
-  })
-
-  # chart 5 - mas layo ba ang last job change, mas gusto mag change pag-usab
+  # chart 4 - last job gap vs job change rate, mo react sa tanan diagnostic filters
   output$plot_diag_last_job <- renderPlotly({
 
-    last_rate <- df_diag %>%
+    last_rate <- diag_data() %>%
       group_by(last_new_job_numeric) %>%
       summarise(
         total   = n(),
@@ -410,17 +438,18 @@ server <- function(input, output) {
     ggplotly(p, tooltip = "text")
   })
 
-  # PREDICTIVE PART
+
+  # PREDICTIVE PART — wala gi usab, gi keep as-is
   prediction_results <- reactiveValues(decision = "No prediction made yet", prob = "")
 
   observeEvent(input$predict_button, {
-    
+
     exp_num = as.numeric(input$experience)
     exp_cat = map_experience(exp_num)
-    
+
     lnj_num = as.numeric(input$last_job_years)
-    lnj_mapped_num = map_lnj(lnj_num) 
-    
+    lnj_mapped_num = map_lnj(lnj_num)
+
     new_employee = tibble(
       company_size         = factor(input$company_size),
       company_type         = factor(input$company_type),
@@ -431,44 +460,32 @@ server <- function(input, output) {
       education_level      = factor(input$educ_level),
       last_new_job_numeric = as.numeric(lnj_mapped_num),
       gender               = factor(input$gender),
-      major_discipline      = factor(input$discipline),
+      major_discipline     = factor(input$discipline),
       training_hours       = as.numeric(input$training_hours)
     )
-    
-    # 1. Safely generate predictions using tidymodels workflow (wf_fit)
+
     result <- tryCatch({
       pred_class <- predict(wf_fit, new_data = new_employee, type = "class")[[1]]
       pred_prob  <- predict(wf_fit, new_data = new_employee, type = "prob")
-      
-      # Extract probability for "Looking"
       prob_looking <- round(pred_prob$.pred_Looking * 100, 1)
-      
-      # Return a list of results if successful
+
       list(
         decision = paste("Employee Status Decision:", as.character(pred_class)),
         prob     = paste0("Probability of looking for a job change: ", prob_looking, "%")
       )
     }, error = function(e) {
-      # Return a list with error messages if it fails
       list(
         decision = "Error in Prediction",
         prob     = paste("Verify factor alignment:", e$message)
       )
     })
-    
-    # 2. Update reactive values with the extracted results
+
     prediction_results$decision <- result$decision
     prediction_results$prob     <- result$prob
   })
 
-  # 3. Render outputs back to your UI mainPanel elements
-  output$prediction_decision <- renderText({
-    prediction_results$decision
-  })
-  
-  output$prediction_prob <- renderText({
-    prediction_results$prob
-  })
+  output$prediction_decision <- renderText({ prediction_results$decision })
+  output$prediction_prob     <- renderText({ prediction_results$prob })
 }
 
 shinyApp(ui = ui, server = server)
