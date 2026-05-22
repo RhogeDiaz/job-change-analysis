@@ -154,7 +154,7 @@ ui <- page_navbar(
       ),
 
       mainPanel(
-        h1('Prediction Results'),
+        h3('Prediction Results'),
         hr(),
         h3(textOutput('prediction_decision')),
         p(textOutput('prediction_prob')),

@@ -7,7 +7,6 @@ library(tidyr)
 library(dplyr)
 library(ranger)
 
-model = readRDS("../job-change-analysis/job_change_predictor.rds")
 dataset = "https://raw.githubusercontent.com/RhogeDiaz/job-change-analysis/refs/heads/main/clean_hr_dataset.csv"
 
 df = read_csv(dataset)
