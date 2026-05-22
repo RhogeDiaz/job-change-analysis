@@ -4,12 +4,41 @@ library(plotly)
 library(bslib)
 library(tidyverse)
 
+dataset = "https://raw.githubusercontent.com/RhogeDiaz/job-change-analysis/refs/heads/main/clean_hr_dataset.csv"
+
 # gi load ang cleaned dataset
-df <- read_csv("clean_hr_dataset.csv", show_col_types = FALSE)
+df <- read_csv(dataset, show_col_types = FALSE)
 
 # train rows ra ang gamiton para sa tanan nga charts
 df_train <- df %>% filter(split == "train")
 
+map_experience <- function(val) {
+  if (is.null(val) || is.na(val) || !is.numeric(val)) {
+    return("Unknown")
+  }
+
+  if (val < 1) {
+    return("<1")
+  } else if (val > 20) {
+    return(">20")
+  } else {
+    return(as.character(as.integer(val)))
+  }
+}
+
+map_lnj<- function(val) {
+  if (is.null(val) || is.na(val) || !is.numeric(val)) {
+    return(0)
+  }
+
+  if (val < 1) {
+    return(0)
+  } else if (val > 5) {
+    return(5)
+  } else {
+    return(val)
+  }
+}
 
 ui <- page_navbar(
   title = "HR Analytics Dashboard",
@@ -101,6 +130,30 @@ ui <- page_navbar(
         )
       )
     )
+  ),
+
+  # PREDICTIVE ANALYTICS TAB
+  nav_panel(
+    title = "Predictive Analytics",
+    sidebarPanel(
+        h3('Enter Employee Information'),
+        selectInput('company_size', "Company Size", c('<10', '50-99', '100-500', '500-999', '1000-4999', '10000+', '5000-9999', 'Unknown')),
+        selectInput('company_type', 'Company Type', c('Early Stage Startup', 'Funded Startup', 'NGO', 'Public Sector', 'Pvt Ltd', 'Unknown', 'Other')),
+        numericInput('experience', 'Years of Experience', 1),
+        selectInput('enrolled', 'Enrolled University', c('Full time course', 'Part time course', 'No enrollment', 'Unknown')),
+        radioButtons('relevant_exp', 'Has experience in the current field?', c('Yes', 'No')),
+        selectInput('educ_level', 'Educational Attainment', c('Graduate', 'High School', 'Masters', 'Phd', 'Primary School', 'Unknown')),
+        numericInput('last_job_years', 'Years in previous job', 0),
+        radioButtons('gender', 'Gender', c('Male', 'Female', 'Other', 'Unknown')),
+        selectInput('discipline', 'Major Discipline', c('STEM', 'Business Degree', 'Arts', 'Humanities', 'Other', 'No Major')),
+        numericInput('training_hours', 'Training Hours', 0),
+        actionButton('predict_button', 'Predict Employee Job Change')
+    )
+  ),
+
+  # ABOUT TAB
+  nav_panel(
+    title = "About"
   )
 )
 
