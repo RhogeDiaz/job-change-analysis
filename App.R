@@ -471,6 +471,7 @@ ui <- page_sidebar(
         "A data-driven approach to understanding and predicting employee behavior.")
     ),
 
+    # ── row 1: dashboard info + dataset ─────────────────────
     layout_columns(
       col_widths = c(6, 6),
       gap = "16px",
@@ -478,6 +479,7 @@ ui <- page_sidebar(
       card(
         card_header(tagList(bs_icon("bar-chart-fill"), " About This Dashboard")),
         card_body(
+          p("This web dashboard serves as our learning evidence for CS 226 Data Analytics - Statistics Using R, AY 2025–2026. The application aims to understand the factors that lead Data Scientists to leave their current job. This dashboard offers valuable insights for HR and companies that employ specialists in the field of data science."),
           p("This dashboard provides three layers of HR analytics:"),
           tags$ul(
             tags$li(tags$b("Descriptive Analytics — "),
@@ -494,7 +496,104 @@ ui <- page_sidebar(
         card_header(tagList(bs_icon("database-fill"), " Dataset")),
         card_body(
           p("The dataset used is a cleaned HR dataset sourced from a job change prediction study."),
-          p("Features include education level, company size/type, experience, training hours, gender, and enrollment status.")
+          p("Features include education level, company size/type, experience, training hours, gender, and enrollment status."),
+          p("HR Analytics: Job Change of Data Scientists: "),
+          tags$a(href="https://www.kaggle.com/datasets/arashnic/hr-analytics-job-change-of-data-scientists?select=aug_test.csv", "Link to Dataset")
+        )
+      )
+    ),
+
+    # ── row 2: student profile cards ────────────────────────
+    layout_columns(
+      col_widths = c(6, 6),
+      gap = "16px",
+      style = "margin-top: 16px;",
+
+      # ── Rhoge's card ──────────────────────────────────────
+      div(
+        style = "border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.15);",
+
+        # colored top banner
+        div(
+          style = sprintf(
+            "background-color: %s; padding: 24px 20px 0; text-align: center; position: relative;",
+            CLR_PRIMARY
+          ),
+          h5(style = "color: #ffffff; font-weight: 700; margin-bottom: 2px; font-size: 1.1rem;",
+             "Rhoge Vhir Diaz"),
+          p(style = "color: rgba(255,255,255,0.85); font-weight: 600; margin-bottom: 18px; font-size: 0.9rem;",
+            "BSCS Student"),
+
+          # circular image placeholder — overlaps the bottom edge of the banner
+          div(
+            style = "display: flex; justify-content: center;",
+            div(
+              style = paste0(
+                "width: 90px; height: 90px; border-radius: 50%;",
+                "background-color: #e2e8f0;",
+                "border: 4px solid #ffffff;",
+                "box-shadow: 0 2px 8px rgba(0,0,0,0.2);",
+                "overflow: hidden;",
+                "margin-bottom: -45px; position: relative; z-index: 2;"
+              ),
+              tags$img(src = "roj.jpg", style = "width: 100%; height: 100%; object-fit: cover; border-radius: 50%;")
+            )
+          )
+        ),
+
+        # dark info section
+        div(
+          style = "background-color: var(--bs-body-bg); border: 1px solid var(--bs-border-color); border-top: none; padding: 56px 20px 20px; border-radius: 0 0 12px 12px;",
+          p(style = "margin-bottom: 4px; font-size: 0.88rem;",
+            bs_icon("building"), " College of Information and Computing"),
+          p(style = "margin-bottom: 4px; font-size: 0.88rem;",
+            bs_icon("mortarboard"), " BS Computer Science Major in Data Science"),
+          p(style = "margin-bottom: 0; font-size: 0.88rem;",
+            bs_icon("journal-code"), " CS 226 Data Analytics - Stat Using R, AY 2025-2026")
+        )
+      ),
+
+      # ── Rex's card ────────────────────────────────────────
+      div(
+        style = "border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.15);",
+
+        # colored top banner (accent violet for partner)
+        div(
+          style = sprintf(
+            "background-color: %s; padding: 24px 20px 0; text-align: center; position: relative;",
+            CLR_ACCENT_VIOLET
+          ),
+          h5(style = "color: #ffffff; font-weight: 700; margin-bottom: 2px; font-size: 1.1rem;",
+             "Rex Jezril Cabilar"),
+          p(style = "color: rgba(255,255,255,0.85); font-weight: 600; margin-bottom: 18px; font-size: 0.9rem;",
+            "BSCS Student"),
+
+          # circular image placeholder
+          div(
+            style = "display: flex; justify-content: center;",
+            div(
+              style = paste0(
+                "width: 90px; height: 90px; border-radius: 50%;",
+                "background-color: #e2e8f0;",
+                "border: 4px solid #ffffff;",
+                "box-shadow: 0 2px 8px rgba(0,0,0,0.2);",
+                "display: flex; align-items: center; justify-content: center;",
+                "margin-bottom: -45px; position: relative; z-index: 2;"
+              ),
+              tags$img(src = "rex.png", style = "width: 100%; height: 100%; object-fit: cover; border-radius: 50%;")
+            )
+          )
+        ),
+
+        # dark info section
+        div(
+          style = "background-color: var(--bs-body-bg); border: 1px solid var(--bs-border-color); border-top: none; padding: 56px 20px 20px; border-radius: 0 0 12px 12px;",
+          p(style = "margin-bottom: 4px; font-size: 0.88rem;",
+            bs_icon("building"), " College of Information and Computing"),
+          p(style = "margin-bottom: 4px; font-size: 0.88rem;",
+            bs_icon("mortarboard"), " BS Computer Science Major in Data Science"),
+          p(style = "margin-bottom: 0; font-size: 0.88rem;",
+            bs_icon("journal-code"), " CS 226 Data Analytics - Stat Using R, AY 2025-2026")
         )
       )
     )
