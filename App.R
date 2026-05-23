@@ -125,6 +125,54 @@ custom_css <- sprintf("
 }
 [data-bs-theme='dark'] .sidebar-brand { color: #f0fdfa; }
 
+/* fix body and general text */
+[data-bs-theme='dark'] body,
+[data-bs-theme='dark'] p,
+[data-bs-theme='dark'] h1,
+[data-bs-theme='dark'] h2,
+[data-bs-theme='dark'] h3,
+[data-bs-theme='dark'] h4,
+[data-bs-theme='dark'] h5,
+[data-bs-theme='dark'] h6,
+[data-bs-theme='dark'] label,
+[data-bs-theme='dark'] .form-label {
+  color: #e2e8f0 !important;
+}
+
+/* muted text — slightly dimmer but still readable */
+[data-bs-theme='dark'] .text-muted {
+  color: #94a3b8 !important;
+}
+
+/* profile card info section text */
+[data-bs-theme='dark'] .about-hero p { color: #f0fdfa !important; }
+
+/* select / input / radio text */
+[data-bs-theme='dark'] .form-control,
+[data-bs-theme='dark'] .form-select,
+[data-bs-theme='dark'] .form-check-label {
+  color: #e2e8f0 !important;
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+/* dynamic insight cards text */
+[data-bs-theme='dark'] .predict-result p,
+[data-bs-theme='dark'] .predict-result h4 {
+  color: #e2e8f0 !important;
+}
+
+/* insight blocks (the risk factor rows) */
+[data-bs-theme='dark'] h6 {
+  color: #f1f5f9 !important;
+}
+
+/* list items in about tab */
+[data-bs-theme='dark'] li { color: #e2e8f0 !important; }
+
+/* links */
+[data-bs-theme='dark'] a { color: #67e8f9 !important; }
+
 /* ── predictive form polish ────────────────────────── */
 .predict-sidebar {
   background: var(--bs-body-bg);
@@ -204,8 +252,8 @@ sidebar_nav <- sidebar(
     style = "position: absolute; bottom: 20px; left: 16px; right: 16px;",
     div(
       class = "sidebar-bottom",
-      bs_icon("moon-stars-fill"),
-      "Dark Mode",
+      bs_icon("cloud-sun-fill"),
+      "Change Light Modes",
       div(style = "margin-left: auto;",
           input_dark_mode(id = "dark_mode", mode = "light"))
     )
@@ -654,8 +702,12 @@ server <- function(input, output, session) {
       scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
       labs(x = "Status", y = input$desc_yaxis) +
       theme_minimal(base_size = 12) +
-      theme(panel.grid.major.x = element_blank(), panel.grid.minor = element_blank())
-    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)")
+      theme(panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(),
+        text               = element_text(color = "#8899aa"),  
+        axis.text          = element_text(color = "#8899aa"),  
+        axis.title         = element_text(color = "#8899aa")
+  )
+    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)", font = list(color = '#8899aa'))
   })
 
   output$plot_education <- renderPlotly({
@@ -667,8 +719,12 @@ server <- function(input, output, session) {
       scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
       labs(x = "Education Level", y = input$desc_yaxis) +
       theme_minimal(base_size = 12) +
-      theme(panel.grid.major.x = element_blank(), panel.grid.minor = element_blank())
-    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)")
+      theme(panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(),
+        text               = element_text(color = "#8899aa"),  
+        axis.text          = element_text(color = "#8899aa"),  
+        axis.title         = element_text(color = "#8899aa")
+  )
+    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)", font = list(color = '#8899aa'))
   })
 
   output$plot_training <- renderPlotly({
@@ -679,8 +735,12 @@ server <- function(input, output, session) {
       labs(y = "Training Hours", x = "") +
       theme_minimal(base_size = 12) +
       theme(panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(),
-            axis.text.x = element_blank())
-    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)")
+        axis.text.x = element_blank(),
+        text               = element_text(color = "#8899aa"),  
+        axis.text          = element_text(color = "#8899aa"),  
+        axis.title         = element_text(color = "#8899aa")
+      )
+    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)", font = list(color = '#8899aa'))
   })
 
   output$plot_university <- renderPlotly({
@@ -692,8 +752,12 @@ server <- function(input, output, session) {
       scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
       labs(x = "Enrollment Status", y = input$desc_yaxis) +
       theme_minimal(base_size = 12) +
-      theme(panel.grid.major.x = element_blank(), panel.grid.minor = element_blank())
-    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)")
+      theme(panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(),
+        text               = element_text(color = "#8899aa"),  
+        axis.text          = element_text(color = "#8899aa"),  
+        axis.title         = element_text(color = "#8899aa")
+  )
+    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)", font = list(color = '#8899aa'))
   })
 
   # ── DIAGNOSTIC CHARTS ────────────────────────────────────────
@@ -708,8 +772,12 @@ server <- function(input, output, session) {
       labs(x = "Education Level", y = "Count", fill = "Status") +
       theme_minimal(base_size = 12) +
       theme(panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(),
-            axis.text.x = element_text(angle = 15, hjust = 1))
-    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)")
+        axis.text.x = element_text(angle = 15, hjust = 1),
+        text               = element_text(color = "#8899aa"),  
+        axis.text          = element_text(color = "#8899aa"),  
+        axis.title         = element_text(color = "#8899aa")
+      )
+    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)", font = list(color = '#8899aa'))
   })
 
   output$plot_diag_experience <- renderPlotly({
@@ -725,8 +793,12 @@ server <- function(input, output, session) {
       scale_x_continuous(breaks = seq(0, 21, by = 3)) +
       labs(x = "Years of Experience", y = "% Looking for Job Change") +
       theme_minimal(base_size = 12) +
-      theme(panel.grid.minor = element_blank())
-    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)")
+      theme(panel.grid.minor = element_blank(),
+        text               = element_text(color = "#8899aa"),  
+        axis.text          = element_text(color = "#8899aa"),  
+        axis.title         = element_text(color = "#8899aa")
+  )
+    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)", font = list(color = '#8899aa'))
   })
 
   output$plot_diag_heatmap <- renderPlotly({
@@ -737,8 +809,12 @@ server <- function(input, output, session) {
       scale_fill_gradient(low = CLR_HEAT_LO, high = CLR_HEAT_HI) +
       labs(x = "Education Level", y = "Major Discipline", fill = "Count") +
       theme_minimal(base_size = 12) +
-      theme(axis.text.x = element_text(angle = 15, hjust = 1))
-    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)")
+      theme(axis.text.x = element_text(angle = 15, hjust = 1),
+        text               = element_text(color = "#8899aa"),  
+        axis.text          = element_text(color = "#8899aa"),  
+        axis.title         = element_text(color = "#8899aa")
+      )
+    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)", font = list(color = '#8899aa'))
   })
 
   output$plot_diag_last_job <- renderPlotly({
@@ -753,8 +829,12 @@ server <- function(input, output, session) {
       scale_x_continuous(breaks = 0:5) +
       labs(x = "Years Since Last Job Change", y = "% Looking for Job Change") +
       theme_minimal(base_size = 12) +
-      theme(panel.grid.major.x = element_blank(), panel.grid.minor = element_blank())
-    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)")
+      theme(panel.grid.major.x = element_blank(), panel.grid.minor = element_blank(),
+        text               = element_text(color = "#8899aa"),  
+        axis.text          = element_text(color = "#8899aa"),  
+        axis.title         = element_text(color = "#8899aa")
+      )
+    ggplotly(p, tooltip = "text") %>% layout(paper_bgcolor = "rgba(0,0,0,0)", plot_bgcolor = "rgba(0,0,0,0)", font = list(color = '#8899aa'))
   })
 
 # ── PREDICTIVE LOGIC & DYNAMIC INSIGHTS ───────────────────────────────
